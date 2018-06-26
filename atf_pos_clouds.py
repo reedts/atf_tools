@@ -3,12 +3,13 @@ import subprocess
 import matplotlib.pyplot as pp
 from sklearn.decomposition import PCA
 
-
-def extract(atf_program):
-    data = []
-
+def run(atf_program):
     result_lines = subprocess.run(atf_program, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+    
+    return result_lines
 
+
+def extract(result_lines):
     relevant_output = []
     
     # find all indices where the 'BEGIN_COORD_DATA' and 'END_COORD_DATA' is
@@ -31,10 +32,10 @@ def plot(data):
         plot = pp.scatter(transformed_points[:,0], transformed_points[:,1])
         plots.append(plot)
     
-    pp.legend(plots, map(str, range(len(data))))
-    pp.show()
+    pp.legend(plots, map(str, range(len(data))), loc='upper right')
 
 
 if __name__ == "__main__":
     data = extract(sys.argv[1])
     plot(data)
+    pp.show()

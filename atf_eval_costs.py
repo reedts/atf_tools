@@ -5,11 +5,18 @@ import subprocess
 import pygal
 import matplotlib.pyplot as pp
 
+import atf_pos_clouds
 
-def extract(atf_program):
-    data = []
+
+def run(atf_program):
     # Capture stdout of atf program as list of lines
     result_lines = subprocess.run(atf_program, stdout=subprocess.PIPE).stdout.decode('utf-8').split('\n')
+
+    return result_lines
+
+
+def extract(result_lines):
+    data = []
     # This is the output we're interested in   
     relevant_output = [line for line in result_lines if "evaluated" in line]
     
@@ -39,18 +46,29 @@ def plot_svg(data):
 def plot_interactive(data):
     filtered_data = [x for x in data if x[1] is not None]
     pp.plot(filtered_data)
-    pp.show()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Processes ATF results to plot.')
     parser.add_argument('file', nargs='+', type=str, help='path of a ATF binary')
     parser.add_argument('--interactive', action='store_const', const=True)
+    parser.add_argument('--points', action='store_const', const=True)
     args = parser.parse_args()
-
-    data = extract(args.file)
+    
+    output = run(args.file)
+    cost_data = extract(output)
 
     if args.interactive:
-        plot_interactive(data)
+        pp.figure(1)
+        pp.subplot(211)
+        plot_interactive(cost_data)
+        
+        if args.points:
+            point_data = atf_pos_clouds.extract(output)
+            pp.subplot(212)
+            atf_pos_clouds.plot(point_data)
+
+        pp.show()
+
     else:
         plot_svg(data)
 
